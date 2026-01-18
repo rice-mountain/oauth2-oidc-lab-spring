@@ -24,7 +24,8 @@ public class HomeController {
     public String dashboard(
             Model model,
             @AuthenticationPrincipal OAuth2User oauth2User,
-            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient) {
+            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
+            jakarta.servlet.http.HttpSession session) {
         
         // Get basic user information
         String userName = oauth2User != null ? oauth2User.getName() : "Unknown";
@@ -46,6 +47,12 @@ public class HomeController {
         }
         
         model.addAttribute("accessToken", authorizedClient.getAccessToken().getTokenValue());
+        
+        // Add session information
+        model.addAttribute("sessionId", session.getId());
+        model.addAttribute("sessionCreationTime", session.getCreationTime());
+        model.addAttribute("sessionLastAccessedTime", session.getLastAccessedTime());
+        model.addAttribute("sessionMaxInactiveInterval", session.getMaxInactiveInterval());
         
         return "dashboard";
     }
