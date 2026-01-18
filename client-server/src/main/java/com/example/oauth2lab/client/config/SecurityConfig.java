@@ -48,6 +48,9 @@ public class SecurityConfig {
         );
     }
 
+    // OAuth2-only client configuration (no openid scope)
+    // Note: Both clients share the same credentials on the authorization server
+    // to demonstrate different flow behaviors with the same client
     private ClientRegistration oauth2ClientRegistration() {
         return ClientRegistration.withRegistrationId("oauth2-client")
                 .clientId("oauth2-client-app")

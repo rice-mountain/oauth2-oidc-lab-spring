@@ -99,7 +99,7 @@ public class SecurityConfig {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri("http://localhost:8081/login/oauth2/code/oauth2-client")
-                .redirectUri("http://localhost:8081/authorized")
+                .redirectUri("http://localhost:8081/login/oauth2/code/oidc-client")  // Both OAuth2 and OIDC flows use same client
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("read")
