@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 / OIDC Lab - Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        .info-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .success-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        .oauth2-badge {
+            background: #007bff;
+        }
+        .token-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border: 1px solid #ffc107;
+        }
+        .token-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .claims-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #d1ecf1;
+            border-radius: 5px;
+            border: 1px solid #bee5eb;
+        }
+        .claims-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+            background: white;
+        }
+        .claims-table th, .claims-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .claims-table th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button.danger {
+            background-color: #dc3545;
+        }
+        .button.danger:hover {
+            background-color: #c82333;
+        }
+        .api-test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #e7f3ff;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .api-response {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            display: none;
+        }
+    </style>
+    <script>
+        function testApi(endpoint) {
+            const responseDiv = document.getElementById('api-response');
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = 'Loading...';
+            
+            fetch(endpoint, {
+                headers: {
+                    'Authorization': 'Bearer ' + document.getElementById('access-token').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                responseDiv.textContent = 'Error: ' + error.message;
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ 認証成功 - ダッシュボード</h1>
+        
+        <div class="info-section">
+            <h2>認証情報</h2>
+            <p><strong>ユーザー名:</strong> <span th:text="${userName}"></span></p>
+            <p><strong>クライアント:</strong> <span th:text="${clientName}"></span>
+                <span th:if="${isOidc}" class="success-badge">OIDC</span>
+                <span th:unless="${isOidc}" class="success-badge oauth2-badge">OAuth2</span>
+            </p>
+        </div>
+
+        <div th:if="${isOidc}" class="token-section">
+            <h2>🎫 ID Token (OIDC)</h2>
+            <p>OpenID Connect フローで取得した ID Token です。ユーザーの識別情報が含まれています。</p>
+            <div class="token-content" th:text="${idToken}"></div>
+        </div>
+
+        <div th:if="${isOidc}" class="claims-section">
+            <h2>📋 ID Token Claims</h2>
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>Claim</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="claim : ${idTokenClaims}">
+                        <td th:text="${claim.key}"></td>
+                        <td th:text="${claim.value}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="token-section">
+            <h2>🔑 Access Token</h2>
+            <p>リソースサーバー（API）へのアクセスに使用するトークンです。</p>
+            <input type="hidden" id="access-token" th:value="${accessToken}">
+            <div class="token-content" th:text="${accessToken}"></div>
+        </div>
+
+        <div class="info-section">
+            <h2>👤 ユーザー属性</h2>
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>属性</th>
+                        <th>値</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="attr : ${userAttributes}">
+                        <td th:text="${attr.key}"></td>
+                        <td th:text="${attr.value}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="api-test-section">
+            <h2>🧪 Resource Server API テスト</h2>
+            <p>取得した Access Token を使って、Resource Server (API) にアクセスできます。</p>
+            <button class="button" onclick="testApi('/api/user')">GET /api/user</button>
+            <button class="button" onclick="testApi('/api/data')">GET /api/data</button>
+            <div id="api-response" class="api-response"></div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <a href="/" class="button">🏠 ホームに戻る</a>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="button danger">🚪 ログアウト</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
