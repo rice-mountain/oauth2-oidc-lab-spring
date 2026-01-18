@@ -61,6 +61,8 @@ public class SecurityConfig {
                 .scope("read", "write")
                 .authorizationUri(issuerUri + "/oauth2/authorize")
                 .tokenUri(issuerUri + "/oauth2/token")
+                .userInfoUri(issuerUri + "/userinfo")
+                .userNameAttributeName("sub")
                 .clientName("OAuth2 Client (OAuth2 Only)")
                 .build();
     }
