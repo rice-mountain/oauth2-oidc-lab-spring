@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 / OIDC Lab - API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        .info-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .success-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        .oauth2-badge {
+            background: #007bff;
+        }
+        .api-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: #e7f3ff;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .api-endpoint {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .api-endpoint h3 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .endpoint-method {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #28a745;
+            color: white;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .endpoint-description {
+            margin: 15px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px 10px 0;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button.execute {
+            background-color: #28a745;
+        }
+        .button.execute:hover {
+            background-color: #218838;
+        }
+        .button.back {
+            background-color: #6c757d;
+        }
+        .button.back:hover {
+            background-color: #5a6268;
+        }
+        .api-response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .api-response.show {
+            display: block;
+        }
+        .api-response.success {
+            border-left: 4px solid #28a745;
+            background: #d4edda;
+        }
+        .api-response.error {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+        }
+        .token-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border: 1px solid #ffc107;
+        }
+        .token-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+            color: #007bff;
+            font-style: italic;
+        }
+        .loading.show {
+            display: block;
+        }
+    </style>
+    <script>
+        function executeApi(endpoint) {
+            const endpointId = endpoint.replace(/\//g, '-');
+            const responseDiv = document.getElementById('response-' + endpointId);
+            const loadingDiv = document.getElementById('loading-' + endpointId);
+            
+            responseDiv.className = 'api-response';
+            responseDiv.textContent = '';
+            loadingDiv.className = 'loading show';
+            
+            fetch(endpoint, {
+                headers: {
+                    'Authorization': 'Bearer ' + document.getElementById('access-token').value
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingDiv.className = 'loading';
+                responseDiv.className = 'api-response show success';
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                loadingDiv.className = 'loading';
+                responseDiv.className = 'api-response show error';
+                responseDiv.textContent = 'Error: ' + error.message;
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 OAuth認可済みAPI実行</h1>
+        
+        <div class="info-section">
+            <h2>認証情報</h2>
+            <p><strong>ユーザー名:</strong> <span th:text="${userName}"></span></p>
+            <p><strong>クライアント:</strong> <span th:text="${clientName}"></span>
+                <span th:if="${isOidc}" class="success-badge">OIDC</span>
+                <span th:unless="${isOidc}" class="success-badge oauth2-badge">OAuth2</span>
+            </p>
+        </div>
+
+        <div class="token-section">
+            <h2>🔑 使用中の Access Token</h2>
+            <p>以下のAccess Tokenを使用してResource Server APIにアクセスします。</p>
+            <input type="hidden" id="access-token" th:value="${accessToken}">
+            <div class="token-content" th:text="${accessToken}"></div>
+        </div>
+
+        <div class="api-section">
+            <h2>利用可能なAPI</h2>
+            <p>取得したAccess Tokenを使って、以下のResource Server APIを実行できます。</p>
+
+            <div class="api-endpoint">
+                <h3>
+                    <span class="endpoint-method">GET</span>
+                    <span class="endpoint-path">/api/user</span>
+                </h3>
+                <div class="endpoint-description">
+                    認証されたユーザーの情報を取得します。<br>
+                    ユーザー名、権限、認証状態などの情報が返却されます。
+                </div>
+                <button class="button execute" onclick="executeApi('/api/user')">実行</button>
+                <div id="loading--api-user" class="loading">⏳ 実行中...</div>
+                <div id="response--api-user" class="api-response"></div>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>
+                    <span class="endpoint-method">GET</span>
+                    <span class="endpoint-path">/api/data</span>
+                </h3>
+                <div class="endpoint-description">
+                    保護されたデータを取得します。<br>
+                    Resource Serverから提供される機密データにアクセスします。
+                </div>
+                <button class="button execute" onclick="executeApi('/api/data')">実行</button>
+                <div id="loading--api-data" class="loading">⏳ 実行中...</div>
+                <div id="response--api-data" class="api-response"></div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>💡 このページについて</h2>
+            <p>
+                このページでは、OAuth2.0/OIDCフローで取得したAccess Tokenを使用して、
+                Resource Server（API）にアクセスします。
+            </p>
+            <ul>
+                <li><strong>JWT検証:</strong> Resource ServerはAccess Tokenの署名、有効期限、スコープを検証します</li>
+                <li><strong>認可制御:</strong> 正しいトークンがない場合、APIアクセスは拒否されます（401 Unauthorized）</li>
+                <li><strong>スコープ:</strong> トークンに含まれるスコープに基づいてアクセス制御が行われます</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <a href="/dashboard" class="button back">📊 ダッシュボードに戻る</a>
+            <a href="/" class="button back">🏠 ホームに戻る</a>
+        </div>
+    </div>
+</body>
+</html>

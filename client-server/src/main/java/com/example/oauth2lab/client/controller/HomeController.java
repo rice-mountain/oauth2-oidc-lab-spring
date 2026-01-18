@@ -61,4 +61,24 @@ public class HomeController {
     public String sequences() {
         return "sequences";
     }
+
+    @GetMapping("/api-test")
+    public String apiTest(
+            Model model,
+            @AuthenticationPrincipal OAuth2User oauth2User,
+            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient) {
+        
+        // Get basic user information
+        String userName = oauth2User != null ? oauth2User.getName() : "Unknown";
+        model.addAttribute("userName", userName);
+        model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
+        
+        // Check if this is an OIDC flow (has ID Token)
+        boolean isOidc = oauth2User instanceof OidcUser;
+        model.addAttribute("isOidc", isOidc);
+        
+        model.addAttribute("accessToken", authorizedClient.getAccessToken().getTokenValue());
+        
+        return "api-test";
+    }
 }
