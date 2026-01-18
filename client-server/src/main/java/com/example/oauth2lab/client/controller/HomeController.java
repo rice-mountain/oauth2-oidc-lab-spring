@@ -49,4 +49,9 @@ public class HomeController {
         
         return "dashboard";
     }
+
+    @GetMapping("/sequences")
+    public String sequences() {
+        return "sequences";
+    }
 }
