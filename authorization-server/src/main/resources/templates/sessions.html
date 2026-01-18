@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セッション管理 - Authorization Server</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        .info-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .session-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: white;
+        }
+        .session-table th, .session-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .session-table th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        .session-table tr:hover {
+            background: #f8f9fa;
+        }
+        .current-session {
+            background: #d4edda !important;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button.danger {
+            background-color: #dc3545;
+        }
+        .button.danger:hover {
+            background-color: #c82333;
+        }
+        .button.warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .button.warning:hover {
+            background-color: #e0a800;
+        }
+        .button.success {
+            background-color: #28a745;
+        }
+        .button.success:hover {
+            background-color: #218838;
+        }
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 セッション管理</h1>
+        
+        <div class="info-section">
+            <h2>ログイン情報</h2>
+            <p><strong>ユーザー名:</strong> <span th:text="${username}"></span></p>
+            <p><strong>アクティブなセッション数:</strong> <span th:text="${sessionCount}"></span></p>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>ℹ️ セッション管理について</strong><br>
+            このページでは、Authorization Serverに確立されているあなたのセッションを確認・管理できます。
+            各セッションは、認証時に作成され、異なるブラウザやデバイスからのログインを表します。
+        </div>
+
+        <h2>アクティブなセッション一覧</h2>
+        
+        <div th:if="${sessionCount == 0}" class="alert alert-warning">
+            現在アクティブなセッションはありません。
+        </div>
+
+        <table th:if="${sessionCount > 0}" class="session-table">
+            <thead>
+                <tr>
+                    <th>セッションID</th>
+                    <th>最終アクセス日時</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="sessionInfo : ${sessions}" 
+                    th:classappend="${sessionInfo.sessionId == currentSessionId} ? 'current-session' : ''">
+                    <td>
+                        <span th:text="${#strings.substring(sessionInfo.sessionId, 0, 20) + '...'}"></span>
+                        <span th:if="${sessionInfo.sessionId == currentSessionId}" class="badge">現在のセッション</span>
+                    </td>
+                    <td>
+                        <span th:text="${#dates.format(sessionInfo.lastRequest, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                    </td>
+                    <td>
+                        <span th:if="${!sessionInfo.expired}" style="color: #28a745;">✅ アクティブ</span>
+                        <span th:if="${sessionInfo.expired}" style="color: #dc3545;">❌ 期限切れ</span>
+                    </td>
+                    <td>
+                        <form th:action="@{/sessions/delete}" method="post" style="display: inline;">
+                            <input type="hidden" name="sessionId" th:value="${sessionInfo.sessionId}">
+                            <button type="submit" class="button danger" 
+                                    th:onclick="return confirm('このセッションを削除してもよろしいですか？')">
+                                削除
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 40px;">
+            <a href="/" class="button success">🏠 ホームに戻る</a>
+            <form th:if="${sessionCount > 0}" th:action="@{/sessions/delete-all}" method="post" style="display: inline;">
+                <button type="submit" class="button danger" 
+                        th:onclick="return confirm('すべてのセッションを削除してログアウトします。よろしいですか？')">
+                    🚪 すべてのセッションを削除してログアウト
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

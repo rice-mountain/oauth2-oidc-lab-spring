@@ -210,6 +210,39 @@
             </table>
         </div>
 
+        <div class="info-section">
+            <h2>🔐 セッション情報 (Client Server)</h2>
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>値</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>セッションID</td>
+                        <td th:text="${sessionId}"></td>
+                    </tr>
+                    <tr>
+                        <td>作成日時</td>
+                        <td th:text="${#temporals.format(T(java.time.Instant).ofEpochMilli(sessionCreationTime), 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    </tr>
+                    <tr>
+                        <td>最終アクセス日時</td>
+                        <td th:text="${#temporals.format(T(java.time.Instant).ofEpochMilli(sessionLastAccessedTime), 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    </tr>
+                    <tr>
+                        <td>セッションタイムアウト</td>
+                        <td><span th:text="${sessionMaxInactiveInterval}"></span> 秒</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                ℹ️ このセッションは、Client ServerとAuthorization Server間のOAuth2/OIDC認証フローで確立されています。
+            </p>
+        </div>
+
         <div class="api-test-section">
             <h2>🧪 Resource Server API テスト</h2>
             <p>取得した Access Token を使って、Resource Server (API) にアクセスできます。</p>
@@ -220,6 +253,9 @@
 
         <div style="margin-top: 40px;">
             <a href="/" class="button">🏠 ホームに戻る</a>
+            <a href="http://localhost:9000/sessions" target="_blank" class="button" style="background-color: #6c757d;">
+                🔍 Authorization Serverのセッション管理
+            </a>
             <form th:action="@{/logout}" method="post" style="display: inline;">
                 <button type="submit" class="button danger">🚪 ログアウト</button>
             </form>
