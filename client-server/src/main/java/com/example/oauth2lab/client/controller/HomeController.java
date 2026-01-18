@@ -28,7 +28,7 @@ public class HomeController {
             jakarta.servlet.http.HttpSession session) {
         
         // Get basic user information
-        String userName = oauth2User != null ? oauth2User.getName() : "Unknown";
+        String userName = oauth2User.getName();
         model.addAttribute("userName", userName);
         model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
         
@@ -69,7 +69,7 @@ public class HomeController {
             @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient) {
         
         // Get basic user information
-        String userName = oauth2User != null ? oauth2User.getName() : "Unknown";
+        String userName = oauth2User.getName();
         model.addAttribute("userName", userName);
         model.addAttribute("clientName", authorizedClient.getClientRegistration().getClientName());
         
