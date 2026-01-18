@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 / OIDC Lab - Sequence Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        .diagram-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .diagram-section h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .description {
+            color: #666;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding: 15px;
+            background: #fff;
+            border-radius: 5px;
+        }
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 20px 5px 0 0;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .key-points {
+            background: #fff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .key-points ul {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 処理シーケンス図</h1>
+        
+        <div class="info-box">
+            <strong>このページについて：</strong>
+            OAuth2.0とOpenID Connect (OIDC)の各フローにおける処理シーケンスを可視化しています。
+            各コンポーネント間の通信の流れを理解するためにご活用ください。
+        </div>
+
+        <h2>1. OAuth2.0 フロー（Authorization Code Grant）</h2>
+        
+        <div class="diagram-section">
+            <h3>OAuth2.0 処理シーケンス</h3>
+            <div class="description">
+                <p><strong>概要：</strong> Access Tokenのみを取得する標準的なOAuth2.0のAuthorization Code Grantフローです。</p>
+            </div>
+            
+            <div class="mermaid">
+sequenceDiagram
+    participant User as ユーザー<br/>(ブラウザ)
+    participant Client as Client Server<br/>(Port: 8081)
+    participant AuthzServer as Authorization Server<br/>(Port: 9000)
+    
+    User->>Client: 1. OAuth2ログイン要求<br/>/oauth2/authorization/oauth2-client
+    Client->>AuthzServer: 2. 認可リクエスト<br/>/oauth2/authorize<br/>response_type=code<br/>scope=read,write
+    AuthzServer->>User: 3. ログイン画面表示
+    User->>AuthzServer: 4. 認証情報送信<br/>(user/password)
+    AuthzServer->>User: 5. 認可画面表示<br/>(スコープ承認)
+    User->>AuthzServer: 6. スコープ承認
+    AuthzServer->>Client: 7. Authorization Code返却<br/>リダイレクト
+    Client->>AuthzServer: 8. Token Request<br/>/oauth2/token<br/>grant_type=authorization_code<br/>code=[認可コード]
+    AuthzServer->>Client: 9. Access Token返却
+    Client->>AuthzServer: 10. UserInfo取得<br/>/userinfo<br/>Bearer [Access Token]
+    AuthzServer->>Client: 11. ユーザー情報返却
+    Client->>User: 12. ダッシュボード表示<br/>/dashboard
+            </div>
+            
+            <div class="key-points">
+                <strong>重要なポイント：</strong>
+                <ul>
+                    <li><strong>スコープ：</strong> read, write</li>
+                    <li><strong>取得トークン：</strong> Access Token のみ</li>
+                    <li><strong>ユーザー情報取得：</strong> UserInfo エンドポイント経由</li>
+                    <li><strong>ID Token：</strong> なし</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>2. OIDC フロー（OpenID Connect）</h2>
+        
+        <div class="diagram-section">
+            <h3>OIDC 処理シーケンス</h3>
+            <div class="description">
+                <p><strong>概要：</strong> Access TokenとID Tokenの両方を取得するOpenID Connectフローです。</p>
+            </div>
+            
+            <div class="mermaid">
+sequenceDiagram
+    participant User as ユーザー<br/>(ブラウザ)
+    participant Client as Client Server<br/>(Port: 8081)
+    participant AuthzServer as Authorization Server<br/>(OpenID Provider)<br/>(Port: 9000)
+    
+    User->>Client: 1. OIDCログイン要求<br/>/oauth2/authorization/oidc-client
+    Client->>AuthzServer: 2. 認可リクエスト<br/>/oauth2/authorize<br/>response_type=code<br/>scope=openid,profile,read,write
+    AuthzServer->>User: 3. ログイン画面表示
+    User->>AuthzServer: 4. 認証情報送信<br/>(user/password)
+    AuthzServer->>User: 5. 認可画面表示<br/>(スコープ承認)
+    User->>AuthzServer: 6. スコープ承認
+    AuthzServer->>Client: 7. Authorization Code返却<br/>リダイレクト
+    Client->>AuthzServer: 8. Token Request<br/>/oauth2/token<br/>grant_type=authorization_code<br/>code=[認可コード]
+    AuthzServer->>Client: 9. Access Token + ID Token返却
+    Note over Client: ID Tokenを検証<br/>(署名、Issuer、Audience等)
+    Client->>User: 10. ダッシュボード表示<br/>/dashboard<br/>(ID Token Claims含む)
+            </div>
+            
+            <div class="key-points">
+                <strong>重要なポイント：</strong>
+                <ul>
+                    <li><strong>スコープ：</strong> openid, profile, read, write</li>
+                    <li><strong>取得トークン：</strong> Access Token + ID Token</li>
+                    <li><strong>ID Token：</strong> ユーザー識別情報（Claims）を含むJWT</li>
+                    <li><strong>ユーザー情報：</strong> ID Token内のClaimsから直接取得</li>
+                    <li><strong>認証情報：</strong> ID Tokenで提供（UserInfoエンドポイント不要）</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>3. Resource Server API アクセスフロー</h2>
+        
+        <div class="diagram-section">
+            <h3>API アクセス処理シーケンス</h3>
+            <div class="description">
+                <p><strong>概要：</strong> 取得したAccess TokenでResource Server（API）にアクセスする際のフローです。</p>
+            </div>
+            
+            <div class="mermaid">
+sequenceDiagram
+    participant User as ユーザー<br/>(ブラウザ)
+    participant Client as Client Server<br/>(Port: 8081)
+    participant API as Resource Server API<br/>(Port: 8081)
+    participant AuthzServer as Authorization Server<br/>(Port: 9000)
+    
+    Note over User,Client: 認証済み（Access Token保持）
+    User->>Client: 1. APIテストボタンクリック<br/>(/api/user または /api/data)
+    Client->>API: 2. API Request<br/>Authorization: Bearer [Access Token]
+    Note over API: JWT検証開始
+    API->>AuthzServer: 3. JWKs取得（初回のみ）<br/>/oauth2/jwks
+    AuthzServer->>API: 4. 公開鍵返却
+    Note over API: JWT署名検証<br/>有効期限チェック<br/>スコープ検証
+    alt JWT検証成功
+        API->>Client: 5. API Response (200 OK)<br/>リクエストされたデータ
+        Client->>User: 6. 結果表示
+    else JWT検証失敗
+        API->>Client: 5. Error Response (401 Unauthorized)
+        Client->>User: 6. エラー表示
+    end
+            </div>
+            
+            <div class="key-points">
+                <strong>重要なポイント：</strong>
+                <ul>
+                    <li><strong>認証方式：</strong> Bearer Token（JWTとして検証）</li>
+                    <li><strong>JWT検証：</strong> 署名、有効期限、Issuer、Audienceをチェック</li>
+                    <li><strong>公開鍵取得：</strong> JWKs エンドポイントから（キャッシュされる）</li>
+                    <li><strong>保護対象API：</strong> /api/user, /api/data</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 OAuth2.0とOIDCの主な違い：</strong><br>
+            <ul style="margin: 10px 0; line-height: 1.8;">
+                <li><strong>OAuth2.0：</strong> 認可（Authorization）が主目的。Access Tokenのみ取得し、UserInfoエンドポイントからユーザー情報を取得</li>
+                <li><strong>OIDC：</strong> 認証（Authentication）が主目的。ID Tokenでユーザー識別情報を直接取得でき、認証レイヤーを提供</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <a href="/" class="button">🏠 ホームに戻る</a>
+        </div>
+    </div>
+</body>
+</html>
