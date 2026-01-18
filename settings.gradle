@@ -1,0 +1,4 @@
+rootProject.name = 'oauth2-oidc-lab-spring'
+
+include 'authorization-server'
+include 'client-server'

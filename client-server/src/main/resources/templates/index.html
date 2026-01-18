@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 / OIDC Lab - Home</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .flow-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .flow-section h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .login-button {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 10px 10px 10px 0;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .login-button:hover {
+            background-color: #0056b3;
+        }
+        .login-button.oidc {
+            background-color: #28a745;
+        }
+        .login-button.oidc:hover {
+            background-color: #218838;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .description {
+            color: #666;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        .feature-list {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 OAuth2.0 / OpenID Connect 検証ラボ</h1>
+        
+        <div class="info-box">
+            <strong>このラボについて：</strong>
+            OAuth2.0とOpenID Connect (OIDC)の動作を検証するための実験環境です。
+            異なるフローを選択して、認証・認可の動作を確認できます。
+        </div>
+
+        <h2>認証フローを選択してください</h2>
+
+        <div class="flow-section">
+            <h3>1. OAuth2.0 フロー（OAuth2のみ）</h3>
+            <p class="description">
+                <strong>Authorization Code Grant</strong> フローを使用します。<br>
+                このフローでは Access Token のみを取得し、ID Token は含まれません。<br>
+                ユーザー情報は UserInfo エンドポイントから取得します。
+            </p>
+            <div>
+                <strong>スコープ：</strong> read, write<br>
+                <strong>取得トークン：</strong> Access Token のみ
+            </div>
+            <br>
+            <a href="/oauth2/authorization/oauth2-client" class="login-button">
+                OAuth2 フローでログイン
+            </a>
+        </div>
+
+        <div class="flow-section">
+            <h3>2. OIDC フロー（OpenID Connect）</h3>
+            <p class="description">
+                <strong>OpenID Connect</strong> を使用した認証フローです。<br>
+                このフローでは Access Token に加えて <strong>ID Token</strong> を取得します。<br>
+                ID Token にはユーザーの識別情報（Claims）が含まれています。
+            </p>
+            <div>
+                <strong>スコープ：</strong> openid, profile, read, write<br>
+                <strong>取得トークン：</strong> Access Token + ID Token
+            </div>
+            <br>
+            <a href="/oauth2/authorization/oidc-client" class="login-button oidc">
+                OIDC フローでログイン
+            </a>
+        </div>
+
+        <div class="feature-list">
+            <h2>実装機能</h2>
+            <ul>
+                <li><strong>Authorization Server</strong> - OAuth2.0認可サーバー / OpenID Provider (ポート: 9000)</li>
+                <li><strong>Client Server</strong> - OAuth2クライアント + Resource Server API (ポート: 8081)</li>
+                <li><strong>Authorization Code Grant</strong> - 認可コードフロー</li>
+                <li><strong>PKCE対応</strong> - 将来的な拡張に対応可能な設計</li>
+                <li><strong>Refresh Token対応</strong> - 将来的な拡張に対応可能な設計</li>
+                <li><strong>Resource Server API</strong> - JWT検証によるAPIアクセス制御</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <strong>📝 テストアカウント：</strong><br>
+            ユーザー名: <code>user</code><br>
+            パスワード: <code>password</code>
+        </div>
+    </div>
+</body>
+</html>
