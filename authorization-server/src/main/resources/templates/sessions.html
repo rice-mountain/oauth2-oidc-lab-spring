@@ -150,20 +150,22 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="session : ${sessions}" 
-                    th:classappend="${session.sessionId == currentSessionId} ? 'current-session' : ''">
+                <tr th:each="sessionInfo : ${sessions}" 
+                    th:classappend="${sessionInfo.sessionId == currentSessionId} ? 'current-session' : ''">
                     <td>
-                        <span th:text="${#strings.substring(session.sessionId, 0, 20) + '...'}"></span>
-                        <span th:if="${session.sessionId == currentSessionId}" class="badge">現在のセッション</span>
+                        <span th:text="${#strings.substring(sessionInfo.sessionId, 0, 20) + '...'}"></span>
+                        <span th:if="${sessionInfo.sessionId == currentSessionId}" class="badge">現在のセッション</span>
                     </td>
-                    <td th:text="${#temporals.format(session.lastRequest, 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td>
-                        <span th:if="${!session.expired}" style="color: #28a745;">✅ アクティブ</span>
-                        <span th:if="${session.expired}" style="color: #dc3545;">❌ 期限切れ</span>
+                        <span th:text="${#dates.format(sessionInfo.lastRequest, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                    </td>
+                    <td>
+                        <span th:if="${!sessionInfo.expired}" style="color: #28a745;">✅ アクティブ</span>
+                        <span th:if="${sessionInfo.expired}" style="color: #dc3545;">❌ 期限切れ</span>
                     </td>
                     <td>
                         <form th:action="@{/sessions/delete}" method="post" style="display: inline;">
-                            <input type="hidden" name="sessionId" th:value="${session.sessionId}">
+                            <input type="hidden" name="sessionId" th:value="${sessionInfo.sessionId}">
                             <button type="submit" class="button danger" 
                                     th:onclick="return confirm('このセッションを削除してもよろしいですか？')">
                                 削除
