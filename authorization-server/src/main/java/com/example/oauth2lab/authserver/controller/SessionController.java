@@ -41,10 +41,22 @@ public class SessionController {
     }
 
     @PostMapping("/sessions/delete")
-    public String deleteSession(@RequestParam("sessionId") String sessionId, HttpSession currentSession) {
+    public String deleteSession(@RequestParam("sessionId") String sessionId, 
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                HttpSession currentSession) {
         SessionInformation sessionInfo = sessionRegistry.getSessionInformation(sessionId);
         
         if (sessionInfo != null) {
+            // Security check: only allow users to delete their own sessions
+            Object sessionPrincipal = sessionInfo.getPrincipal();
+            if (sessionPrincipal instanceof UserDetails) {
+                UserDetails sessionUser = (UserDetails) sessionPrincipal;
+                if (!sessionUser.getUsername().equals(userDetails.getUsername())) {
+                    // User trying to delete another user's session - deny
+                    return "redirect:/sessions?error=unauthorized";
+                }
+            }
+            
             sessionInfo.expireNow();
             
             // If deleting current session, invalidate it
