@@ -86,7 +86,62 @@
         border-radius: 5px;
         margin: 20px 0;
       }
+      .result-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-top: 15px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .success-box {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+      }
+      .error-box {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+      }
     </style>
+    <script>
+      async function testClientCredentials() {
+        const resultDiv = document.getElementById('client-credentials-result');
+        resultDiv.innerHTML = '<div class="result-box">⏳ 読み込み中...</div>';
+        
+        try {
+          // Call public data endpoint
+          const publicResponse = await fetch('/client-credentials/public-data');
+          const publicData = await publicResponse.json();
+          
+          // Call protected data endpoint
+          const protectedResponse = await fetch('/client-credentials/protected-data');
+          const protectedData = await protectedResponse.json();
+          
+          resultDiv.innerHTML = `
+            <div class="result-box success-box">
+              <strong>✅ Client Credentials Grant 成功！</strong><br><br>
+              <strong>Public Data API レスポンス:</strong><br>
+              ${JSON.stringify(publicData, null, 2)}<br><br>
+              <strong>Protected Data API レスポンス:</strong><br>
+              ${JSON.stringify(protectedData, null, 2)}
+            </div>
+          `;
+        } catch (error) {
+          resultDiv.innerHTML = `
+            <div class="result-box error-box">
+              <strong>❌ エラーが発生しました</strong><br><br>
+              ${error.message}
+            </div>
+          `;
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="container">
@@ -104,6 +159,27 @@
           <a href="/dashboard" class="login-button" style="background-color: #17a2b8"> 📊 ダッシュボード </a>
           <a href="/api-test" class="login-button" style="background-color: #ffc107; color: #333"> 🧪 API テスト </a>
         </div>
+      </div>
+
+      <h2>🤖 Client Credentials Grant（ログイン不要）</h2>
+
+      <div class="flow-section" style="border-left-color: #17a2b8;">
+        <h3>Machine-to-Machine API アクセス</h3>
+        <p class="description">
+          <strong>Client Credentials Grant</strong> フローを使用します。<br />
+          このフローではユーザーログインは不要で、アプリケーション（マシン）が直接 Authorization Server の API にアクセスします。<br />
+          クライアント認証情報のみで Access Token を取得し、リソースサーバーの API を呼び出せます。
+        </p>
+        <div>
+          <strong>スコープ：</strong> api.read, api.write<br />
+          <strong>認証方法：</strong> Client Secret（ユーザーログイン不要）<br />
+          <strong>用途：</strong> サーバー間通信、バッチ処理など
+        </div>
+        <br />
+        <button onclick="testClientCredentials()" class="login-button" style="background-color: #17a2b8;">
+          🔄 Client Credentials で API を呼び出す
+        </button>
+        <div id="client-credentials-result" style="margin-top: 20px;"></div>
       </div>
 
       <h2>認証フローを選択してください</h2>

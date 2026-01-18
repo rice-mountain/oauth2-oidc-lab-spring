@@ -73,13 +73,16 @@ public class SecurityConfig {
             throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(Customizer.withDefaults())
                 .sessionManagement(session -> session
                         .maximumSessions(-1)
                         .sessionRegistry(sessionRegistry())
-                );
+                )
+                .oauth2ResourceServer((resourceServer) -> resourceServer
+                        .jwt(Customizer.withDefaults()));
 
         return http.build();
     }
@@ -116,7 +119,18 @@ public class SecurityConfig {
                         .build())
                 .build();
 
-        return new InMemoryRegisteredClientRepository(publicClient);
+        // Client for Client Credentials Grant (machine-to-machine)
+        RegisteredClient clientCredentialsClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("machine-client")
+                .clientSecret("{noop}machine-secret")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api.read")
+                .scope("api.write")
+                .build();
+
+        return new InMemoryRegisteredClientRepository(publicClient, clientCredentialsClient);
     }
 
     @Bean
