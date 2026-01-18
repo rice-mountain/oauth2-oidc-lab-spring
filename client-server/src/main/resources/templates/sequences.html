@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OAuth2 / OIDC Lab - Sequence Diagrams</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>
-        mermaid.initialize({ startOnLoad: true, theme: 'default' });
-    </script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -52,12 +48,44 @@
             background: #fff;
             border-radius: 5px;
         }
-        .mermaid {
+        .sequence-diagram {
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 5px;
             margin: 20px 0;
-            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 2;
+            overflow-x: auto;
+        }
+        .seq-step {
+            margin: 10px 0;
+            padding: 8px 15px;
+            background: #e7f3ff;
+            border-left: 3px solid #007bff;
+            border-radius: 3px;
+        }
+        .seq-step .step-num {
+            font-weight: bold;
+            color: #007bff;
+            display: inline-block;
+            min-width: 30px;
+        }
+        .seq-actor {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .seq-arrow {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .seq-note {
+            background: #fff3cd;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-left: 3px solid #ffc107;
+            border-radius: 3px;
+            font-style: italic;
         }
         .button {
             display: inline-block;
@@ -90,6 +118,15 @@
             margin: 10px 0;
             line-height: 1.8;
         }
+        .actor-box {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 3px;
+            margin: 0 5px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -110,24 +147,78 @@
                 <p><strong>概要：</strong> Access Tokenのみを取得する標準的なOAuth2.0のAuthorization Code Grantフローです。</p>
             </div>
             
-            <div class="mermaid">
-sequenceDiagram
-    participant User as ユーザー<br/>(ブラウザ)
-    participant Client as Client Server<br/>(Port: 8081)
-    participant AuthzServer as Authorization Server<br/>(Port: 9000)
-    
-    User->>Client: 1. OAuth2ログイン要求<br/>/oauth2/authorization/oauth2-client
-    Client->>AuthzServer: 2. 認可リクエスト<br/>/oauth2/authorize<br/>response_type=code<br/>scope=read,write
-    AuthzServer->>User: 3. ログイン画面表示
-    User->>AuthzServer: 4. 認証情報送信<br/>(user/password)
-    AuthzServer->>User: 5. 認可画面表示<br/>(スコープ承認)
-    User->>AuthzServer: 6. スコープ承認
-    AuthzServer->>Client: 7. Authorization Code返却<br/>リダイレクト
-    Client->>AuthzServer: 8. Token Request<br/>/oauth2/token<br/>grant_type=authorization_code<br/>code=[認可コード]
-    AuthzServer->>Client: 9. Access Token返却
-    Client->>AuthzServer: 10. UserInfo取得<br/>/userinfo<br/>Bearer [Access Token]
-    AuthzServer->>Client: 11. ユーザー情報返却
-    Client->>User: 12. ダッシュボード表示<br/>/dashboard
+            <div class="sequence-diagram">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <span class="actor-box">ユーザー</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Client Server (Port: 8081)</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Authorization Server (Port: 9000)</span>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">1.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　OAuth2ログイン要求<br>
+                    　　<code>/oauth2/authorization/oauth2-client</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">2.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　認可リクエスト<br>
+                    　　<code>/oauth2/authorize?response_type=code&scope=read,write</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">3.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　ログイン画面表示
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">4.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　認証情報送信 (user/password)
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">5.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　認可画面表示（スコープ承認）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">6.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　スコープ承認
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">7.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　Authorization Code返却（リダイレクト）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">8.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　Token Request<br>
+                    　　<code>/oauth2/token (grant_type=authorization_code, code=[認可コード])</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">9.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　<strong>Access Token</strong> 返却
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">10.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　UserInfo取得<br>
+                    　　<code>/userinfo (Bearer [Access Token])</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">11.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　ユーザー情報返却
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">12.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　ダッシュボード表示 <code>/dashboard</code>
+                </div>
             </div>
             
             <div class="key-points">
@@ -149,23 +240,72 @@ sequenceDiagram
                 <p><strong>概要：</strong> Access TokenとID Tokenの両方を取得するOpenID Connectフローです。</p>
             </div>
             
-            <div class="mermaid">
-sequenceDiagram
-    participant User as ユーザー<br/>(ブラウザ)
-    participant Client as Client Server<br/>(Port: 8081)
-    participant AuthzServer as Authorization Server<br/>(OpenID Provider)<br/>(Port: 9000)
-    
-    User->>Client: 1. OIDCログイン要求<br/>/oauth2/authorization/oidc-client
-    Client->>AuthzServer: 2. 認可リクエスト<br/>/oauth2/authorize<br/>response_type=code<br/>scope=openid,profile,read,write
-    AuthzServer->>User: 3. ログイン画面表示
-    User->>AuthzServer: 4. 認証情報送信<br/>(user/password)
-    AuthzServer->>User: 5. 認可画面表示<br/>(スコープ承認)
-    User->>AuthzServer: 6. スコープ承認
-    AuthzServer->>Client: 7. Authorization Code返却<br/>リダイレクト
-    Client->>AuthzServer: 8. Token Request<br/>/oauth2/token<br/>grant_type=authorization_code<br/>code=[認可コード]
-    AuthzServer->>Client: 9. Access Token + ID Token返却
-    Note over Client: ID Tokenを検証<br/>(署名、Issuer、Audience等)
-    Client->>User: 10. ダッシュボード表示<br/>/dashboard<br/>(ID Token Claims含む)
+            <div class="sequence-diagram">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <span class="actor-box">ユーザー</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Client Server (Port: 8081)</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Authorization Server / OpenID Provider (Port: 9000)</span>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">1.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　OIDCログイン要求<br>
+                    　　<code>/oauth2/authorization/oidc-client</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">2.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　認可リクエスト<br>
+                    　　<code>/oauth2/authorize?response_type=code&scope=openid,profile,read,write</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">3.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　ログイン画面表示
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">4.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　認証情報送信 (user/password)
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">5.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　認可画面表示（スコープ承認）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">6.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　スコープ承認
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">7.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　Authorization Code返却（リダイレクト）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">8.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　Token Request<br>
+                    　　<code>/oauth2/token (grant_type=authorization_code, code=[認可コード])</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">9.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　<strong>Access Token + ID Token</strong> 返却
+                </div>
+                
+                <div class="seq-note">
+                    📝 Client側でID Tokenを検証（署名、Issuer、Audience等）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">10.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　ダッシュボード表示（ID Token Claims含む）<br>
+                    　　<code>/dashboard</code>
+                </div>
             </div>
             
             <div class="key-points">
@@ -188,27 +328,69 @@ sequenceDiagram
                 <p><strong>概要：</strong> 取得したAccess TokenでResource Server（API）にアクセスする際のフローです。</p>
             </div>
             
-            <div class="mermaid">
-sequenceDiagram
-    participant User as ユーザー<br/>(ブラウザ)
-    participant Client as Client Server<br/>(Port: 8081)
-    participant API as Resource Server API<br/>(Port: 8081)
-    participant AuthzServer as Authorization Server<br/>(Port: 9000)
-    
-    Note over User,Client: 認証済み（Access Token保持）
-    User->>Client: 1. APIテストボタンクリック<br/>(/api/user または /api/data)
-    Client->>API: 2. API Request<br/>Authorization: Bearer [Access Token]
-    Note over API: JWT検証開始
-    API->>AuthzServer: 3. JWKs取得（初回のみ）<br/>/oauth2/jwks
-    AuthzServer->>API: 4. 公開鍵返却
-    Note over API: JWT署名検証<br/>有効期限チェック<br/>スコープ検証
-    alt JWT検証成功
-        API->>Client: 5. API Response (200 OK)<br/>リクエストされたデータ
-        Client->>User: 6. 結果表示
-    else JWT検証失敗
-        API->>Client: 5. Error Response (401 Unauthorized)
-        Client->>User: 6. エラー表示
-    end
+            <div class="sequence-diagram">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <span class="actor-box">ユーザー</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Client Server</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Resource Server API</span>
+                    <span style="margin: 0 20px;">⇄</span>
+                    <span class="actor-box">Authorization Server</span>
+                </div>
+                
+                <div class="seq-note">
+                    📝 前提：認証済み（Access Token保持）
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">1.</span> <span class="seq-actor">ユーザー</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　APIテストボタンクリック<br>
+                    　　<code>/api/user</code> または <code>/api/data</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">2.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">Resource Server API</span><br>
+                    　　API Request<br>
+                    　　<code>Authorization: Bearer [Access Token]</code>
+                </div>
+                
+                <div class="seq-note">
+                    🔐 JWT検証開始
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">3.</span> <span class="seq-actor">Resource Server API</span> <span class="seq-arrow">→</span> <span class="seq-actor">Authorization Server</span><br>
+                    　　JWKs取得（初回のみ、以降はキャッシュ）<br>
+                    　　<code>/oauth2/jwks</code>
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">4.</span> <span class="seq-actor">Authorization Server</span> <span class="seq-arrow">→</span> <span class="seq-actor">Resource Server API</span><br>
+                    　　公開鍵返却
+                </div>
+                
+                <div class="seq-note">
+                    🔐 JWT署名検証、有効期限チェック、スコープ検証
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">5a.</span> <strong style="color: #28a745;">✓ JWT検証成功</strong><br>
+                    　　<span class="seq-actor">Resource Server API</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　API Response (200 OK)<br>
+                    　　リクエストされたデータ
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">5b.</span> <strong style="color: #dc3545;">✗ JWT検証失敗</strong><br>
+                    　　<span class="seq-actor">Resource Server API</span> <span class="seq-arrow">→</span> <span class="seq-actor">Client</span><br>
+                    　　Error Response (401 Unauthorized)
+                </div>
+                
+                <div class="seq-step">
+                    <span class="step-num">6.</span> <span class="seq-actor">Client</span> <span class="seq-arrow">→</span> <span class="seq-actor">ユーザー</span><br>
+                    　　結果表示
+                </div>
             </div>
             
             <div class="key-points">
