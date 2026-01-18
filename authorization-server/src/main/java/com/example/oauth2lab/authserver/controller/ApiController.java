@@ -1,5 +1,6 @@
 package com.example.oauth2lab.authserver.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +30,7 @@ public class ApiController {
     }
 
     @GetMapping("/protected-data")
+    @PreAuthorize("hasAuthority('SCOPE_api.read')")
     public Map<String, Object> getProtectedData(Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "This is protected data - requires api.read scope");
