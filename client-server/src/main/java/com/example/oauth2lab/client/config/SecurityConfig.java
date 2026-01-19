@@ -24,7 +24,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/sequences", "/login/**", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/sequences", "/login/**", "/error", "/webjars/**", "/css/**", "/js/**", "/client-credentials/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -44,7 +44,8 @@ public class SecurityConfig {
     public ClientRegistrationRepository clientRegistrationRepository() {
         return new InMemoryClientRegistrationRepository(
                 this.oauth2ClientRegistration(),
-                this.oidcClientRegistration()
+                this.oidcClientRegistration(),
+                this.clientCredentialsClientRegistration()
         );
     }
 
@@ -81,6 +82,18 @@ public class SecurityConfig {
                 .jwkSetUri(issuerUri + "/oauth2/jwks")
                 .userNameAttributeName(IdTokenClaimNames.SUB)
                 .clientName("OIDC Client (with ID Token)")
+                .build();
+    }
+
+    // Client Credentials Grant client for machine-to-machine communication
+    private ClientRegistration clientCredentialsClientRegistration() {
+        return ClientRegistration.withRegistrationId("machine-client")
+                .clientId("machine-client")
+                .clientSecret("machine-secret")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api.read", "api.write")
+                .tokenUri(issuerUri + "/oauth2/token")
                 .build();
     }
 }
