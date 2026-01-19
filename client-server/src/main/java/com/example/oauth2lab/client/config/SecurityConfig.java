@@ -25,11 +25,12 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/sequences", "/login/**", "/error", "/webjars/**", "/css/**", "/js/**", "/client-credentials/**").permitAll()
+                        .requestMatchers("/resource-api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/", true)
                 )
                 .oauth2Client(oauth2 -> {})
                 .logout(logout -> logout

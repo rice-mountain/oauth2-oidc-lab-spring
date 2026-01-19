@@ -141,6 +141,81 @@
           `;
         }
       }
+
+      async function executeApiWithOAuth2(clientType) {
+        const resultDivId = clientType === 'oauth2-client' ? 'oauth2-result' : 'oidc-result';
+        const resultDiv = document.getElementById(resultDivId);
+        resultDiv.innerHTML = '<div class="result-box">⏳ 読み込み中...</div>';
+        
+        // Store the client type in sessionStorage for later use
+        sessionStorage.setItem('pendingApiClient', clientType);
+        
+        try {
+          // Try to call the resource API endpoint - if not authenticated, will be redirected to OAuth flow
+          const response = await fetch('/resource-api/execute', {
+            redirect: 'manual'  // Don't follow redirects automatically
+          });
+          
+          // If we get a redirect, it means we're not authenticated
+          if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 0) {
+            // Not authenticated - redirect to OAuth flow
+            window.location.href = '/oauth2/authorization/' + clientType;
+            return;
+          }
+          
+          // Check for other error statuses
+          if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              // Not authenticated - redirect to OAuth flow
+              window.location.href = '/oauth2/authorization/' + clientType;
+              return;
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            resultDiv.innerHTML = `
+              <div class="result-box success-box">
+                <strong>✅ API 実行成功！</strong><br><br>
+                <strong>クライアント:</strong> ${result.clientName}<br><br>
+                <strong>/api/user レスポンス:</strong><br>
+                ${JSON.stringify(result.userResponse, null, 2)}<br><br>
+                <strong>/api/data レスポンス:</strong><br>
+                ${JSON.stringify(result.dataResponse, null, 2)}
+              </div>
+            `;
+          } else {
+            throw new Error(result.error || '不明なエラー');
+          }
+          
+          // Clear the pending client
+          sessionStorage.removeItem('pendingApiClient');
+          
+        } catch (error) {
+          resultDiv.innerHTML = `
+            <div class="result-box error-box">
+              <strong>❌ エラーが発生しました</strong><br><br>
+              ${error.message}
+            </div>
+          `;
+        }
+      }
+
+      // Check if we just came back from OAuth flow and should execute API
+      window.addEventListener('DOMContentLoaded', async function() {
+        const pendingClient = sessionStorage.getItem('pendingApiClient');
+        // Check if we just returned from OAuth (no error and no specific query params)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasError = urlParams.has('error');
+        
+        if (pendingClient && !hasError) {
+          // We likely just returned from OAuth flow - try to execute the API
+          // Wait a moment for the session to be established
+          setTimeout(() => executeApiWithOAuth2(pendingClient), 500);
+        }
+      });
     </script>
   </head>
   <body>
@@ -182,72 +257,42 @@
         <div id="client-credentials-result" style="margin-top: 20px;"></div>
       </div>
 
-      <h2>認証フローを選択してください</h2>
+      <h2>🔐 Resource Server API を実行</h2>
 
-      <!-- 未ログイン時のみ活性 -->
-      <div sec:authorize="!isAuthenticated()">
-        <div class="flow-section">
-          <h3>1. OAuth2.0 フロー（OAuth2のみ）</h3>
-          <p class="description">
-            <strong>Authorization Code Grant</strong> フローを使用します。<br />
-            このフローでは Access Token のみを取得し、ID Token は含まれません。<br />
-            ユーザー情報は UserInfo エンドポイントから取得します。
-          </p>
-          <div>
-            <strong>スコープ：</strong> read, write<br />
-            <strong>取得トークン：</strong> Access Token のみ
-          </div>
-          <br />
-          <a href="/oauth2/authorization/oauth2-client" class="login-button"> OAuth2 フローでログイン </a>
+      <div class="flow-section">
+        <h3>1. OAuth2.0 フローで API 実行（OAuth2のみ）</h3>
+        <p class="description">
+          <strong>Authorization Code Grant</strong> フローを使用します。<br />
+          このフローでは Access Token のみを取得し、ID Token は含まれません。<br />
+          ボタンをクリックすると、未ログイン時は自動的にOAuth2.0認証を行い、その後APIを実行します。
+        </p>
+        <div>
+          <strong>スコープ：</strong> read, write<br />
+          <strong>取得トークン：</strong> Access Token のみ
         </div>
-
-        <div class="flow-section">
-          <h3>2. OIDC フロー（OpenID Connect）</h3>
-          <p class="description">
-            <strong>OpenID Connect</strong> を使用した認証フローです。<br />
-            このフローでは Access Token に加えて <strong>ID Token</strong> を取得します。<br />
-            ID Token にはユーザーの識別情報（Claims）が含まれています。
-          </p>
-          <div>
-            <strong>スコープ：</strong> openid, profile, read, write<br />
-            <strong>取得トークン：</strong> Access Token + ID Token
-          </div>
-          <br />
-          <a href="/oauth2/authorization/oidc-client" class="login-button oidc"> OIDC フローでログイン </a>
-        </div>
+        <br />
+        <button onclick="executeApiWithOAuth2('oauth2-client')" class="login-button">
+          🚀 OAuth2 で API 実行
+        </button>
+        <div id="oauth2-result" style="margin-top: 20px;"></div>
       </div>
 
-      <!-- ログイン済み時は非活性 -->
-      <div sec:authorize="isAuthenticated()">
-        <div class="flow-section" style="opacity: 0.6">
-          <h3>1. OAuth2.0 フロー（OAuth2のみ）</h3>
-          <p class="description">
-            <strong>Authorization Code Grant</strong> フローを使用します。<br />
-            このフローでは Access Token のみを取得し、ID Token は含まれません。<br />
-            ユーザー情報は UserInfo エンドポイントから取得します。
-          </p>
-          <div>
-            <strong>スコープ：</strong> read, write<br />
-            <strong>取得トークン：</strong> Access Token のみ
-          </div>
-          <br />
-          <span class="login-button disabled"> OAuth2 フローでログイン </span>
+      <div class="flow-section">
+        <h3>2. OIDC フローで API 実行（OpenID Connect）</h3>
+        <p class="description">
+          <strong>OpenID Connect</strong> を使用した認証フローです。<br />
+          このフローでは Access Token に加えて <strong>ID Token</strong> を取得します。<br />
+          ボタンをクリックすると、未ログイン時は自動的にOIDC認証を行い、その後APIを実行します。
+        </p>
+        <div>
+          <strong>スコープ：</strong> openid, profile, read, write<br />
+          <strong>取得トークン：</strong> Access Token + ID Token
         </div>
-
-        <div class="flow-section" style="opacity: 0.6">
-          <h3>2. OIDC フロー（OpenID Connect）</h3>
-          <p class="description">
-            <strong>OpenID Connect</strong> を使用した認証フローです。<br />
-            このフローでは Access Token に加えて <strong>ID Token</strong> を取得します。<br />
-            ID Token にはユーザーの識別情報（Claims）が含まれています。
-          </p>
-          <div>
-            <strong>スコープ：</strong> openid, profile, read, write<br />
-            <strong>取得トークン：</strong> Access Token + ID Token
-          </div>
-          <br />
-          <span class="login-button oidc disabled"> OIDC フローでログイン </span>
-        </div>
+        <br />
+        <button onclick="executeApiWithOAuth2('oidc-client')" class="login-button oidc">
+          🚀 OIDC で API 実行
+        </button>
+        <div id="oidc-result" style="margin-top: 20px;"></div>
       </div>
 
       <div class="feature-list">
